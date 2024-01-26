@@ -95,8 +95,9 @@ public final class DesirePaths extends JavaPlugin implements Listener {
     public void onEnable() {
         // Load config
         saveDefaultConfig();
-//        getConfig().options().copyDefaults(true);
-//        saveConfig();
+        getConfig().options().copyDefaults(true);
+        saveConfig();
+        loadConfig();
 
         // initialize reload & toggle command
         Objects.requireNonNull(getCommand("desirepaths")).setExecutor(new DesirePathsCommand(this));
@@ -207,8 +208,8 @@ public final class DesirePaths extends JavaPlugin implements Listener {
     }
 
     // Handle block at the players feet
-    private void blockHandler(Block block, Player player, int chance, int randomNum, int sprintingBlockAtFeetChance,
-            List<String> blockAtFeetSwitcherConfig) {
+    private void blockHandler(Block block, Player player, int chance, int randomNum, int sprintingChance,
+            List<String> switcherConfig) {
         if (disabledWorlds.contains(player.getWorld().getName())) {
             return;
         }
@@ -220,10 +221,10 @@ public final class DesirePaths extends JavaPlugin implements Listener {
         if (!townyEnabled || !pathsOnlyWherePlayerCanBreak) {
             // Run towny not enabled
             if (!player.isSprinting() && randomNum < chance) {
-                blockSwitcher(block, blockAtFeetSwitcherConfig);
+                blockSwitcher(block, switcherConfig);
             }
-            if (player.isSprinting() && randomNum < chance + sprintingBlockAtFeetChance) {
-                blockSwitcher(block, blockAtFeetSwitcherConfig);
+            if (player.isSprinting() && randomNum < chance + sprintingChance) {
+                blockSwitcher(block, switcherConfig);
             }
         } else {
             // Run if towny is enabled and canBuild is true
@@ -231,19 +232,19 @@ public final class DesirePaths extends JavaPlugin implements Listener {
                     TownyPermission.ActionType.DESTROY);
             if (canBuild) {
                 if (!player.isSprinting() && randomNum < chance) {
-                    blockSwitcher(block, blockAtFeetSwitcherConfig);
+                    blockSwitcher(block, switcherConfig);
                 }
-                if (player.isSprinting() && randomNum < chance + sprintingBlockAtFeetChance) {
-                    blockSwitcher(block, blockAtFeetSwitcherConfig);
+                if (player.isSprinting() && randomNum < chance + sprintingChance) {
+                    blockSwitcher(block, switcherConfig);
                 }
             }
         }
     }
 
-    private void blockSwitcher(Block block, List<String> blockAtFeetSwitcherConfig) {
+    private void blockSwitcher(Block block, List<String> switcherConfig) {
         Material type = block.getType();
         Map<Material, Material> blockSwitcher = new HashMap<>();
-        for (String switchCase : blockAtFeetSwitcherConfig) {
+        for (String switchCase : switcherConfig) {
             String[] parts = switchCase.split(":");
             Material sourceMaterial = Material.matchMaterial(parts[0]);
             Material targetMaterial = Material.matchMaterial(parts[1]);
@@ -251,7 +252,7 @@ public final class DesirePaths extends JavaPlugin implements Listener {
                 blockSwitcher.put(sourceMaterial, targetMaterial);
             } else {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.GOLD + ">>" + ChatColor.RED
-                        + " Invalid block switch case in blockAtFeetModifications: " + switchCase);
+                        + " Invalid block switch case in blockModifications: " + switchCase);
             }
         }
         Material targetMaterial = blockSwitcher.get(type);
